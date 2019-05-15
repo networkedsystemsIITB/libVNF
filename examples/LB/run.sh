@@ -1,0 +1,1 @@
+g++ -o load_balancer -I /home/sgw/Downloads/MTP/netmap-master/sys/ -fpermissive -std=c++11 load_balancer.cpp  -DLIBVNF_STACK=3 -lvnf-l3-static -lboost_system

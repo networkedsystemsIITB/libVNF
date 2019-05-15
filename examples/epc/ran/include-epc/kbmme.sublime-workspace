@@ -1,0 +1,1108 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"lis",
+				"Listenfd"
+			],
+			[
+				"mme_",
+				"mme_server_addr"
+			],
+			[
+				"gtp",
+				"gtp_hdr"
+			],
+			[
+				"sgw",
+				"sgwsocklen"
+			],
+			[
+				"rep",
+				"repevent"
+			],
+			[
+				"return",
+				"return_events"
+			],
+			[
+				"sg",
+				"sgwsocklen"
+			],
+			[
+				"udp_det",
+				"udp_detach_use_ports"
+			],
+			[
+				"udp_de",
+				"udp_detach_free_ports"
+			],
+			[
+				"udp_slo",
+				"udp_slot_size"
+			],
+			[
+				"udp_sl",
+				"udp_slot_three"
+			],
+			[
+				"udp_att",
+				"udp_attach_port"
+			],
+			[
+				"udp_af",
+				"udp_afour_free_ports"
+			],
+			[
+				"ran",
+				"ran_accept_fd"
+			],
+			[
+				"g",
+				"guti"
+			],
+			[
+				"ini",
+				"initial"
+			],
+			[
+				"msg",
+				"msg_type"
+			],
+			[
+				"clos",
+				"closedconn"
+			],
+			[
+				"nume",
+				"numevents"
+			],
+			[
+				"func",
+				"func_one"
+			],
+			[
+				"udp_afour",
+				"udp_afour_use_ports"
+			],
+			[
+				"udp",
+				"udp_afour_port"
+			],
+			[
+				"udp_afo",
+				"udp_afour_use_ports"
+			],
+			[
+				"sw",
+				"sgw_fd"
+			],
+			[
+				"swg",
+				"sgwsocklen"
+			],
+			[
+				"udp_attach",
+				"udp_attach_use_ports"
+			],
+			[
+				"udp_sock",
+				"udp_sock_bind"
+			],
+			[
+				"udp_",
+				"udp_attach_end"
+			],
+			[
+				"udpp",
+				"udpport"
+			],
+			[
+				"IPADDR",
+				"IPADDRB"
+			],
+			[
+				"my",
+				"my_addr"
+			],
+			[
+				"Bpor",
+				"Bportend"
+			],
+			[
+				"Bport",
+				"Bportbeg"
+			],
+			[
+				"t",
+				"transactions"
+			],
+			[
+				"ud",
+				"udfd"
+			],
+			[
+				"client",
+				"clientC_list"
+			],
+			[
+				"sock",
+				"sockaddr"
+			],
+			[
+				"udppo",
+				"udpport_max"
+			],
+			[
+				"udpport",
+				"udpport_start"
+			],
+			[
+				"cur",
+				"cur_fd"
+			],
+			[
+				"clear",
+				"clear_pkt"
+			],
+			[
+				"s",
+				"sgw_addr"
+			],
+			[
+				"ue",
+				"ue_ctx"
+			],
+			[
+				"mme",
+				"mme_s1ap_ue_id"
+			],
+			[
+				"uect",
+				"uectx_mux"
+			],
+			[
+				"s1",
+				"s1mmeid_mux"
+			],
+			[
+				"Packet",
+				"Packet_copy"
+			],
+			[
+				"rc",
+				"rcvr_addr"
+			],
+			[
+				"thread",
+				"thread_data"
+			],
+			[
+				"pthread",
+				"pthread_exit"
+			],
+			[
+				"run",
+				"runs"
+			],
+			[
+				"EPOLL",
+				"EPOLLOUT"
+			],
+			[
+				"ret",
+				"return_events"
+			],
+			[
+				"ep",
+				"epollfd"
+			],
+			[
+				"epo",
+				"epoll_ctl"
+			],
+			[
+				"wreite",
+				"write_stream"
+			],
+			[
+				"fd",
+				"fddata"
+			],
+			[
+				"initi",
+				"initial_fd"
+			],
+			[
+				"write",
+				"write_stream"
+			],
+			[
+				"act",
+				"act_type"
+			],
+			[
+				"hss",
+				"hss_fd"
+			],
+			[
+				"epoll",
+				"epoll_ctl"
+			],
+			[
+				"hss_ip",
+				"hss_ipaddr"
+			],
+			[
+				"hss_",
+				"hss_server_addr"
+			],
+			[
+				"SOC",
+				"SOCK_NONBLOCK"
+			],
+			[
+				"SOCK_",
+				"SOCK_STREAM"
+			],
+			[
+				"pkt",
+				"pkt_len"
+			],
+			[
+				"read",
+				"read_stream"
+			],
+			[
+				"ac",
+				"act_type"
+			],
+			[
+				"e",
+				"epevent"
+			],
+			[
+				"re",
+				"retval"
+			],
+			[
+				"epll",
+				"epoll_create"
+			],
+			[
+				"ev",
+				"events"
+			],
+			[
+				"c_",
+				"c_addr"
+			],
+			[
+				"nu",
+				"num_conn"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"contents": "#include \"kb_mme.h\"\n\n\n\nint main()\n{\n\n\t//server.cpp\n\tint core = 0;\n\tint s;\n\tint ret = -1;\n\tdone = 0;\n\t\n    int portno = mme_my_port;\n    \n    char* conf_file = \"server.conf\";\n    /* initialize mtcp */\n\tif (conf_file == NULL) {\n\t\tTRACE_CONFIG(\"You forgot to pass the mTCP startup config file!\\n\");\n\t\texit(EXIT_FAILURE);\n\t}\n\telse {\n\t\tTRACE_INFO(\"Reading configuration from %s\\n\",conf_file);\n\t}\n\t//step 1. mtcp_init, mtcp_register_signal(optional)\n\tret = mtcp_init(conf_file);\n\tif (ret) {\n\t\tTRACE_CONFIG(\"Failed to initialize mtcp\\n\");\n\t\texit(EXIT_FAILURE);\n\t}\n\t\n\t/* register signal handler to mtcp */\n\tmtcp_register_signal(SIGINT, SignalHandler);\n\n\tTRACE_INFO(\"Application initialization finished.\\n\");\n\t\n\t//step 2. mtcp_core_affinitize\n\tmtcp_core_affinitize(core);\n\t\n\t//step 3. mtcp_create_context. Here order of affinitization and context creation matters.\n\t// mtcp_epoll_create\n\t\n\tmctx_t mctx = mtcp_create_context(core);\n\tif (!mctx) {\n\t\tTRACE_ERROR(\"Failed to create mtcp context!\\n\");\n\t\treturn NULL;\n\t}\n\telse{\n\t\tTRACE_INFO(\"mtcp context created.\\n\");\n\t}\n\t/* create epoll descriptor */\n\tint epollfd = mtcp_epoll_create(mctx, MAX_EVENTS);\n\tif (epollfd < 0) {\n\t\tTRACE_ERROR(\"Failed to create epoll descriptor!\\n\");\n\t\treturn NULL;\n\t}\n\t// till here copied from server.cpp \n\n\t//misc data;\n\tint retval;\n\tint returnval;\n\tint pflag;\n\tint i;\n\n\t//epoll data;\n\t//int epollfd;\n\tstruct mtcp_epoll_event epevent;\n\tstruct mtcp_epoll_event repevent;\n\tstruct mtcp_epoll_event *return_events;\n\tint numevents;\n\n\tint ranlistenfd;\n\n\tranlistenfd = mtcp_socket(mctx, AF_INET, SOCK_STREAM, 0);\n\tif(ranlistenfd < 0)\n\t{\n\t\tTRACE_ERROR(\"Error: Creating listen socket\\n\");\n\t\treturn -1;\n\t}\n\n\tretval = mtcp_setsock_nonblock(mctx, ranlistenfd);\n\tif(retval < 0)\n\t{\n\t\tTRACE_ERROR(\"Error: Making socket nonblocking\\n\");\n\t\treturn -1;\n\t}\n\n\tstruct sockaddr_in mme_server_addr;\n\tstruct sockaddr_in hss_server_addr;\n\n\tbzero((char *) &mme_server_addr, sizeof(mme_server_addr));\n\tmme_server_addr.sin_family = AF_INET;\n\tmme_server_addr.sin_addr.s_addr = inet_addr(mme_ip);\n\tmme_server_addr.sin_port = htons(mme_my_port);\n\n\tretval = mtcp_bind(mctx, ranlistenfd, (struct sockaddr *)&mme_server_addr, sizeof(struct sockaddr_in)); \n\tif(retval < 0)\n\t{\n\t\tTRACE_ERROR(\"Error: Bind Listenfd\\n\");\t\t\n\t}\n\tepevent.events = MTCP_EPOLLIN;\n\tepevent.data.sockid = ranlistenfd;\n\tmtcp_epoll_ctl(mctx, epollfd, MTCP_EPOLL_CTL_ADD, ranlistenfd, &epevent);\n\treturn_events = (struct mtcp_epoll_event *) calloc(MAX_EVENTS, sizeof(struct mtcp_epoll_event));\n\tif(!return_events)\n\t{\n\t\tTRACE_ERROR(\"Error: Calloc return events\\n\");\n\t\texit(-1);\n\t}\n\n\tpflag = 1;\n\twhile(1)\n\t{\n\t\tif(pflag == 1)\n\t\t{\n\t\t\tcout<<\"Going to While\\n\";\n\t\t\tpflag = 0;\n\t\t}\n\n\t\tnumevents = mtcp_epoll_wait(mctx, epollfd, return_events, MAX_EVENTS, -1);\n\t\tif(numevents < 0)\n\t\t{\n\t\t\tif(errno != EINTR)\n\t\t\t\t\tcout<<\"Error: mtcp epoll wait\"<<endl;\n\t\t\t\tbreak;\n\t\t}\n\n\t\tfor(i = 0; i < numevents; i++)\n\t\t{//Events Loop\n\n\t\t\tif(return_events[i].data.sockid == ranlistenfd);\n\t\t\t{//Accept Connection;\n\t\t\t\t\n\t\t\t}\n\t\t}\n\t}\n\n\tmtcp_destroy_context(mctx);\n}",
+			"file": "kb_mme.cpp",
+			"file_size": 2699,
+			"file_write_time": 131504643310799210,
+			"settings":
+			{
+				"buffer_size": 3031,
+				"line_ending": "Unix",
+				"name": "kb_mme.cpp"
+			}
+		},
+		{
+			"file": "/home/trishal/mtp/netmap/netmap issues.txt",
+			"settings":
+			{
+				"buffer_size": 518,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/home/trishal/mtp/netmap/netmap/LINUX/config.status",
+			"settings":
+			{
+				"buffer_size": 119,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "kb_mme.h",
+			"settings":
+			{
+				"buffer_size": 1212,
+				"encoding": "UTF-8",
+				"line_ending": "Unix",
+				"name": "kb_mme.h"
+			}
+		},
+		{
+			"file": "client.cpp",
+			"settings":
+			{
+				"buffer_size": 3705,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "server.cpp",
+			"settings":
+			{
+				"buffer_size": 7768,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "defport.h",
+			"settings":
+			{
+				"buffer_size": 868,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "common.h",
+			"settings":
+			{
+				"buffer_size": 7120,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "my_mme.cpp",
+			"settings":
+			{
+				"buffer_size": 47700,
+				"line_ending": "Unix"
+			}
+		}
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 72.0,
+		"last_filter": "install package",
+		"selected_items":
+		[
+			[
+				"install package",
+				"Package Control: Install Package"
+			]
+		],
+		"width": 449.0
+	},
+	"console":
+	{
+		"height": 146.0,
+		"history":
+		[
+			"import sublime, sublime_plugin",
+			"import urllib.request,os,hashlib; h = 'df21e130d211cfc94d9b0905775a7c0f' + '1e3d39e33b79698005270310898eea76'; pf = 'Package Control.sublime-package'; ipp = sublime.installed_packages_path(); urllib.request.install_opener( urllib.request.build_opener( urllib.request.ProxyHandler()) ); by = urllib.request.urlopen( 'http://packagecontrol.io/' + pf.replace(' ', '%20')).read(); dh = hashlib.sha256(by).hexdigest(); print('Error validating download (got %s instead of %s), please try manual install' % (dh, h)) if dh != h else open(os.path.join( ipp, pf), 'wb' ).write(by)"
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/home/trishal/rcv/reports/opr_blkmme_1_60.txt",
+		"/home/trishal/rcv/reports/opr_mymme_25_60.txt",
+		"/home/trishal/rcv/reports/opr_mymme_5_60.txt",
+		"/home/trishal/rcv/reports/opr_mymme_1_60.txt",
+		"/home/trishal/rcv/reports/opr_blkmme_100_60.txt",
+		"/home/trishal/rcv/reports/opr_blkmme_25_60.txt",
+		"/home/trishal/mtp/netmap/netmap/Makefile",
+		"/home/trishal/mtp/netmap/netmap/sys/modules/netmap/Makefile",
+		"/etc/libvirt/qemu/ubuntu14.04.xml",
+		"/home/trishal/mtp/netmap/netmap/configure",
+		"/home/trishal/mtp/netmap/patches/netmap_vale.patch",
+		"/home/trishal/mtp/epc code/Notes",
+		"/home/trishal/mtp/netmap/patches/mq_hw.sh",
+		"/home/trishal/mtp/epc code/text.txt",
+		"/home/trishal/mtp/netmap/patches/netmap_generic.patch",
+		"/home/trishal/mtp/netmap/patches/netmap.patch",
+		"/home/trishal/mtp/netmap/netmap/README",
+		"/home/trishal/mtp/netmap/netmap issues.txt",
+		"/home/trishal/mtp/netmap/install.sh",
+		"/home/trishal/rcv/testing/mtcp_old/testing/TestServer/server.cpp",
+		"/home/trishal/rcv/testing/mtcp_old/testing/TestClient/client.cpp",
+		"/home/trishal/rcv/testing/TestMultiServer/server.cpp",
+		"/home/trishal/rcv/testing/TestMultiClient/client.cpp",
+		"/home/trishal/rcv/testing/TestMultiServer/server.conf",
+		"/home/trishal/rcv/testing/TestMultiClient/client.conf",
+		"/home/trishal/rcv/testing/TestMultiServer/compile.sh",
+		"/home/trishal/rcv/testing/TestMultiClient/compile.sh",
+		"/home/trishal/rcv/reports/opr_blkmme_500_60.txt",
+		"/home/trishal/rcv/reports/opr_blkmme_200_60.txt",
+		"/home/trishal/rcv/reports/opr_mymme_10_60.txt",
+		"/home/trishal/rcv/reports/prof.txt",
+		"/home/trishal/run",
+		"/home/trishal/rcv/mmelocal/pgw.cpp",
+		"/home/trishal/rcv/mmelocal/hss.cpp",
+		"/home/trishal/rcv/mmelocal/ran_simulator.cpp",
+		"/home/trishal/rcv/mmelocal/defport.h",
+		"/home/trishal/rcv/mmelocal/common.h",
+		"/home/trishal/rcv/mmelocal/my_mme.cpp",
+		"/home/trishal/rcv/mmelocal/sgw.cpp",
+		"/home/trishal/rcv/mmelocal/utils.h",
+		"/home/trishal/rcv/mmelocal/ran.cpp",
+		"/home/trishal/rcv/relepc/network.cpp",
+		"/home/trishal/rcv/mmefinal/ran.cpp",
+		"/home/trishal/rcv/mmefinal/ran_simulator.cpp",
+		"/home/trishal/rcv/mmefinal/my_mme.cpp",
+		"/home/trishal/rcv/relepc/sgw.cpp",
+		"/home/trishal/rcv/relepc/utils.h",
+		"/home/trishal/rcv/relepc/ran_simulator.cpp",
+		"/home/trishal/rcv/relepc/ran.cpp",
+		"/home/trishal/rcv/relepc/pgw.cpp",
+		"/home/trishal/rcv/relepc/mme.cpp",
+		"/home/trishal/rcv/relepc/old test/sgw.cpp",
+		"/home/trishal/rcv/relepc/old test/mme.cpp",
+		"/home/trishal/rcv/relepc/old test/ran.cpp",
+		"/home/trishal/rcv/relepc/old test/pgw.cpp",
+		"/home/trishal/rcv/relepc/old test/hss.cpp",
+		"/home/trishal/rcv/relepc/hss.cpp",
+		"/home/trishal/rcv/relepc/hss.h",
+		"/home/trishal/rcv/relepc/hss_server.h",
+		"/home/trishal/rcv/relepc/hss_server.cpp",
+		"/home/trishal/rcv/old test/mme.cpp",
+		"/home/trishal/rcv/old test/utils.h",
+		"/home/trishal/rcv/old test/utils.cpp",
+		"/home/trishal/rcv/old test/sgw.cpp",
+		"/home/trishal/rcv/old test/sgw_server.cpp",
+		"/home/trishal/rcv/old test/ran_simulator.cpp",
+		"/home/trishal/rcv/old test/ran.cpp",
+		"/home/trishal/mtp/epc code/seeDDD/v1.0/ran.cpp",
+		"/home/trishal/rcv/old test/pgw.cpp",
+		"/home/trishal/rcv/old test/mysql.cpp",
+		"/home/trishal/rcv/old test/mme.h",
+		"/home/trishal/rcv/old test/mme_server.cpp",
+		"/home/trishal/rcv/old test/hss_server.h",
+		"/home/trishal/rcv/old test/hss_server.cpp",
+		"/home/trishal/rcv/old test/hss.h",
+		"/home/trishal/rcv/old test/hss.cpp",
+		"/home/trishal/rcv/mmefinal/common.h",
+		"/home/trishal/mtp/epc code/src/v1.0/ran_simulator.cpp",
+		"/home/trishal/rcv/mmefinal/defport.h",
+		"/home/trishal/mtp/epc code/NFV_LTE_EPC-1.1-Distributed/src/ran_simulator.cpp",
+		"/home/trishal/mtp/epc code/apollbased/seed/ran_simulator.cpp",
+		"/home/trishal/rcv/seed/ran_simulator.cpp",
+		"/home/trishal/rcv/old test/sgw.h",
+		"/home/trishal/rcv/old test/sgw.out",
+		"/home/trishal/rcv/old test/sgw_server.h",
+		"/home/trishal/rcv/old test/mme_server.h",
+		"/home/trishal/rcv/seed/ran.cpp",
+		"/home/trishal/rcv/old ran/utils.h",
+		"/home/trishal/rcv/old ran/pgw_server.h",
+		"/home/trishal/rcv/old ran/pgw_server.cpp",
+		"/home/trishal/rcv/old ran/pgw.h",
+		"/home/trishal/rcv/old ran/pgw.cpp",
+		"/home/trishal/rcv/old ran/ran_simulator.cpp",
+		"/home/trishal/rcv/old ran/ran.cpp",
+		"/home/trishal/rcv/makefile",
+		"/home/trishal/rcv/mymakefile",
+		"/home/trishal/rcv/old ran/makefile",
+		"/home/trishal/rcv/mmefinal/mme.cpp",
+		"/home/trishal/rcv/mmefinal/pgw.cpp",
+		"/home/trishal/mtp/epc code/README.md",
+		"/home/trishal/rcv/Notes",
+		"/home/trishal/rcv/mmefinal/ran_simulator.h",
+		"/home/trishal/mtp/epc code/apollbased/seed/makefile",
+		"/home/trishal/rcv/mmefinal/makefile",
+		"/home/trishal/rcv/mmefinal/mysql.cpp",
+		"/home/trishal/rcv/mmefinal/pgw.h",
+		"/home/trishal/rcv/mmefinal/pgw_server.cpp",
+		"/home/trishal/rcv/mmefinal/pgw_server.h",
+		"/home/trishal/rcv/mmefinal/ran.h",
+		"/home/trishal/rcv/mmefinal/sgw.cpp",
+		"/home/trishal/rcv/mmefinal/sgw.h",
+		"/home/trishal/rcv/mmefinal/sgw_server.cpp",
+		"/home/trishal/rcv/mmefinal/sgw_server.h",
+		"/home/trishal/rcv/mmefinal/hss_server.cpp",
+		"/home/trishal/rcv/mmefinal/hss_server.h",
+		"/home/trishal/rcv/mmefinal/hss.h",
+		"/home/trishal/rcv/mmefinal/hss.cpp",
+		"/home/trishal/mtp/epc code/apollbased/mmefinal/mme.cpp",
+		"/home/trishal/mtp/epc code/apollbased/mmefinal/mme.h",
+		"/home/trishal/mtp/epc code/apollbased/mmefinal/hss_server.h",
+		"/home/trishal/mtp/epc code/apollbased/mmefinal/hss_server.cpp",
+		"/home/trishal/mtp/epc code/apollbased/mmefinal/hss.h",
+		"/home/trishal/mtp/epc code/apollbased/mmefinal/defport.h",
+		"/home/trishal/mtp/epc code/apollbased/mmefinal/common.h",
+		"/home/trishal/flux.py",
+		"/home/trishal/mtp/epc code/apollbased/mmefinal/hss.cpp",
+		"/home/trishal/ff/tut/cs/recever.cpp",
+		"/home/trishal/ff/tut/ophelp.txt"
+	],
+	"find":
+	{
+		"height": 36.0
+	},
+	"find_in_files":
+	{
+		"height": 0.0,
+		"where_history":
+		[
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"10.129.41.57",
+			"#",
+			"1",
+			"\"10.",
+			"\"10.129",
+			"\"10",
+			"\"10.1",
+			"\"10",
+			"\"10.129",
+			"\"10",
+			"\"10.129",
+			"\"10",
+			" \"10",
+			"\"10",
+			"inet_",
+			"inet_aton",
+			"here",
+			"\\",
+			"192.168.1.74",
+			"zero",
+			"\t\t\t",
+			"\t\t",
+			"foo",
+			"g_sync.",
+			"g_sync.mux_init",
+			"g_sync.",
+			"ttach",
+			"udp_sock_bind",
+			"read_sct",
+			"size",
+			"void *threadid",
+			"   ",
+			" (CSE)",
+			"CSE",
+			" (",
+			"(CSE)",
+			"hreadid",
+			"a4",
+			"s1_uteid_dl",
+			"ttach",
+			"ttach_four",
+			"attach_three",
+			"eps_bearer_id",
+			"td",
+			"read",
+			"L1",
+			"L3",
+			"L2",
+			"l2",
+			"\";",
+			";",
+			"{",
+			"i",
+			"res",
+			"sgw_addr",
+			"ET",
+			"EPOLLIN",
+			"len",
+			"sgw_addr",
+			"name",
+			"udp_sock_name",
+			"Bind err",
+			"ppp",
+			"udp",
+			"Rcvd :5801 send :",
+			"Rcvd :8251 send :",
+			" send :16498",
+			"16498",
+			"sleep",
+			"srcc",
+			"srca",
+			"2mm",
+			"main",
+			"clientaddr",
+			"sgw",
+			"sgw_addr",
+			"sgw",
+			"sendto",
+			"nbytes",
+			"TRACE",
+			"15",
+			"\"1",
+			"eeeee",
+			"127.0.0.1",
+			"10",
+			"10.129.41.57",
+			"113",
+			"\"1",
+			"//",
+			"\t//ran",
+			"//",
+			"ok",
+			"\t\t//ok",
+			"//",
+			"g_",
+			"int",
+			"\";",
+			"string",
+			"78\";\n",
+			"\";",
+			" \"",
+			" = ",
+			"=",
+			"192",
+			"192.168",
+			"192.168.1.83",
+			"g_timer",
+			"uint32_t s11_cteid_mme",
+			"\n",
+			"\t",
+			"\"192.168.1.74\"",
+			"apn_in_use",
+			"handle_location_update",
+			"apn_in_use",
+			"//cout",
+			"26.49",
+			"mme_s1ap_ue_id",
+			"\"192",
+			"hmac",
+			"num_autn_vectors",
+			"g_sync.",
+			"g_utils.handle_type1_error(",
+			"Sync::",
+			"guti ",
+			"s1mme_id",
+			"g_integrity",
+			"clean_conn",
+			"close_conn"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+			"clientC_list",
+			"clientA_list",
+			"1mm"
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 0,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "kb_mme.cpp",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 3031,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2987,
+								2987
+							]
+						],
+						"settings":
+						{
+							"auto_name": "kb_mme.cpp",
+							"syntax": "Packages/C++/C++.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 1676.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "/home/trishal/mtp/netmap/netmap issues.txt",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 518,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								493,
+								493
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Text/Plain text.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "/home/trishal/mtp/netmap/netmap/LINUX/config.status",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 119,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								119,
+								119
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Text/Plain text.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 3,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "kb_mme.h",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1212,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								909,
+								909
+							]
+						],
+						"settings":
+						{
+							"auto_name": "kb_mme.h",
+							"syntax": "Packages/C++/C++.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 300.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 6,
+					"type": "text"
+				}
+			]
+		},
+		{
+			"selected": 1,
+			"sheets":
+			[
+				{
+					"buffer": 4,
+					"file": "client.cpp",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 3705,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 840.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 5,
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "server.cpp",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 7768,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								5923,
+								5967
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 3496.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 4,
+					"type": "text"
+				},
+				{
+					"buffer": 6,
+					"file": "defport.h",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 868,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								0,
+								0
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.sublime-syntax"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 7,
+					"type": "text"
+				},
+				{
+					"buffer": 7,
+					"file": "common.h",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 7120,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								5,
+								5
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 8,
+					"type": "text"
+				}
+			]
+		},
+		{
+			"selected": 0,
+			"sheets":
+			[
+				{
+					"buffer": 8,
+					"file": "my_mme.cpp",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 47700,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								3214,
+								3214
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/C++/C++.sublime-syntax",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 3960.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				}
+			]
+		},
+		{
+			"sheets":
+			[
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 28.0
+	},
+	"input":
+	{
+		"height": 0.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			],
+			[
+				1,
+				0,
+				2,
+				1
+			],
+			[
+				2,
+				0,
+				3,
+				1
+			],
+			[
+				3,
+				0,
+				4,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			0.347368421053,
+			0.454016620499,
+			0.868421052632,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"pinned_build_system": "",
+	"project": "",
+	"replace":
+	{
+		"height": 52.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"",
+				"~/mtp/epc code/epollbased/v2/my_mme.cpp"
+			]
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"selected_group": 3,
+	"settings":
+	{
+	},
+	"show_minimap": false,
+	"show_open_files": true,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 50.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}

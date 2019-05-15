@@ -1,0 +1,13 @@
+{
+  "maxCores": 1,
+  "bufferSize": 128,
+  "dataStoreIP": "169.254.9.18",
+  "dataStorePorts": [
+    7000,
+    7001,
+    7002,
+    7003
+  ],
+  "dataStoreThreshold": 131072,
+  "useRemoteDataStore": false
+}
