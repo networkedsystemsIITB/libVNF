@@ -45,13 +45,15 @@
 * This creates and installs
     * a shared object (.so) version for of libvnf dynamic linking
     * an archive (.a) version of libvnf for static linking
+* If using kernel bypass stack, set appropriate mTCP path on line 55 and 56 of CMakeLists.txt 
+* If using kernel bypass (mTCP over netmap) stack, set the netmap path on line 88 of CMakeLists.txt
 * Dynamically linkable version of library will be named **libvnf-{kernel/kernelbypass/l3}-dynamic.so**
 * Statically linkable version will be named **libvnf-{kernel/kernelbypass/l3}-static.a**
 * CMake caches the options passed to it, so once passed there is no need to pass the option (-DSTACK=...) from second time
 * If you want to change the stack, delete all files in `build` dir and run cmake again with required stack
 
 # How to use?
-* Use `#include \<libvnf/core.hpp\>` header
+* Use `#include <libvnf/core.hpp>` header
 * Refer to the [abc example](examples/abc) for a gentle introduction to APIs
 * For compilation of your VNF you can just use -lvnf-kernel-static if you are using library compiled for kernel stack with static linkage. The other variants of linkage include flags -lvnf-{kernel,kernel-bypass,kernel-l3}-{static,dynamic}.
 
@@ -65,10 +67,10 @@
 
 # Collaborators
 1. [Priyanka Naik](https://www.cse.iitb.ac.in/~ppnaik/)
-1. [Akash Kanase](https://in.linkedin.com/in/akashkanase)
-1. [Trishal Patel](https://www.cse.iitb.ac.in/~trishal/)
 1. [Yashasvi Sriram Patkuri](https://github.com/Yashasvi-Sriram)
 1. [Sai Sandeep Moparthi](https://github.com/sandeep-END)
+1. [Akash Kanase](https://in.linkedin.com/in/akashkanase)
+1. [Trishal Patel](https://www.cse.iitb.ac.in/~trishal/)
 1. [Sagar Tikore](https://www.cse.iitb.ac.in/~sagart/)
 1. [Vaishali Jhalani](https://www.cse.iitb.ac.in/~vaishali/)
 1. [Prof. Mythili Vutukuru](https://www.cse.iitb.ac.in/~mythili/)
