@@ -1,6 +1,7 @@
 # libvnf
 * **libvnf** is a library to easily build custom, scalable, high-performance, virtual network functions
 * This is an implementation of paper [libVNF: Building Virtual Network Functions Made Easy](https://www.cse.iitb.ac.in/~mythili/research/papers/2018-libvnf-socc.pdf) accepted in SoCC 2018
+* Refer to [release-socc](https://github.com/networkedsystemsIITB/libVNF/tree/release-socc) branch for the above version
 
 ### Features
 * Written entirely in C++
@@ -45,8 +46,6 @@
 * This creates and installs
     * a shared object (.so) version for of libvnf dynamic linking
     * an archive (.a) version of libvnf for static linking
-* If using kernel bypass stack, set appropriate mTCP path on line 55 and 56 of CMakeLists.txt 
-* If using kernel bypass (mTCP over netmap) stack, set the netmap path on line 88 of CMakeLists.txt
 * Dynamically linkable version of library will be named **libvnf-{kernel/kernelbypass/l3}-dynamic.so**
 * Statically linkable version will be named **libvnf-{kernel/kernelbypass/l3}-static.a**
 * CMake caches the options passed to it, so once passed there is no need to pass the option (-DSTACK=...) from second time
