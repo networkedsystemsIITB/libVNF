@@ -38,6 +38,22 @@
     * with dynamic linking to libvnf run `make b-kernel-dynamic`
        * In this case make sure to add /usr/local/lib to $LD_LIBRARY_PATH
        * This can be done by executing `export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH`
+    * When using kernel bypass stack option (tested for the layman version) add appropriate paths in [Makefile](layman/Makefile) as below:
+       * For mTCP + netmap setup, change the mTCP path in line 15
+       * For mTCP + DPDK setup, change the following:
+           * line 10 DPDK=1 
+           * line 12 NETMAP=0
+           * line 15, approriate mTCP path
+           * line 29, DPDK_INC=$(MTCP_P_FLD)/dpdk/include
+           * line 40, DPDK_LIB=$(MTCP_P_FLD)/dpdk/lib/
+           * line 42, DPDK_MACHINE_FLAGS = $(shell cat $(MTCP_P_FLD)/dpdk/include/cflags.txt)
+           * line 51, DPDK_LIB_FLAGS = $(shell cat $(MTCP_P_FLD)/dpdk/lib/ldflags.txt)
+    * When using kernel bypass stack, following changes are required in [server.conf](layman/server.conf)
+        * set num_cores (line 17) equal to number of cores
+        * For mTCP + netmap setup, set the netmap interface in line 37
+        * For mTCP + DPDK setup, change the following:
+            * comment line 6, uncomment line 7
+            * uncomment line 31, comment line 37
 * Compile A node using
     * `make a`
 
