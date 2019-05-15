@@ -21,10 +21,12 @@
 * Make sure to configure and make mTCP whenever you want to change #cores of your VM
 	* `./configure --enable-netmap CFLAGS="-DMAX_CPUS=32"` if #cores = 32
         * `sudo make`
-	* mTCP configuration needs a **server.conf** file. You can find an example [here](../../examples/abc/remote/server.conf)
+	* mTCP configuration needs a **server.conf** file. You can find an example [here](../../examples/abc/layman/server.conf)
 	* Changes required in **server.conf**
 		* **port=<network_interface_name>**
 		* **num_cores=<number_of_cores_of_your_VM>**
-	* Give the path to your mTCP folder in [CMakeLists.txt](../../CMakeLists.txt) on line **50, 51**
+		* For mTCP over DPDK, comment line **6**, uncomment line **7**
+	* Give the path to your mTCP folder in [CMakeLists.txt](../../CMakeLists.txt) on line **55, 56**
+	* For mTCP over netmap stack, set the netmap path on line **88** of CMakeLists.txt(../../CMakeLists.txt)
 	* Use proper mTCP paths in your VNF Makefile
 	* You need not recompile and install libvnf every time you change #cores of VM, but you should recompile your VNF code
