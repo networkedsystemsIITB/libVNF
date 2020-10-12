@@ -45,7 +45,7 @@ void onDatastoreReply(ConnId& aConnId, int reqObjId, void *requestObject, void *
     state->dsreq = setCachedDSKeyDNE(dsKey);
     unsetCachedDSKeyDNE(dsKey);
     aConnId.unsetPktDNE((void *) state->req);
-
+    
     // send data to A
     char *buffer = aConnId.getPktBuf();
     memcpy((void *) buffer, packet, 50);
@@ -55,7 +55,7 @@ void onDatastoreReply(ConnId& aConnId, int reqObjId, void *requestObject, void *
 void onPacketReceivedFromC(ConnId& cConnId, int reqObjId, void *requestObject, char *packet, int packetLen, int errCode, int streamNum) {
     // get values from request object [created at B when a packet is received from A]
     BState *state = static_cast<BState *>(requestObject);
-
+    
     cConnId.freeReqObj(1).closeConn();
 
     // prepare A's connection id and key id
@@ -72,7 +72,6 @@ void onPacketReceivedFromC(ConnId& cConnId, int reqObjId, void *requestObject, c
         aReqObjId *= 10;
         aReqObjId += packet[i] - '0';
     }
-
     // get key value pair stored in data store [when a packet is received from A]
     int dsKey = getKey(state->aCoreId, state->aSocketId, aReqObjId);
     aConnId.retrieveData("", dsKey, LOCAL, onDatastoreReply, aReqObjId);
@@ -87,7 +86,7 @@ void onPacketReceivedFromA(ConnId& aConnId, int reqObjId, void *requestObject, c
     int dsKey = getKey(aConnId.coreId, aConnId.socketId, reqObjId);
 
     // connect to C as a client
-    ConnId cConnId = aConnId.createClient(mmeIp, neighbour1Ip, neighbour1Port, "tcp");
+    ConnId cConnId = aConnId.createClient(mmeIp, neighbour1Ip, neighbour1Port, "udp");
 
     // set values in request object
     BState *state = static_cast<BState *>(requestObject);
@@ -128,7 +127,8 @@ int main(int argc, char *argv[]) {
     dataStorePorts.push_back(7003);
 
     if (argc < 5) {
-        exit(0);
+        spdlog::critical("Usage: {} <b-ip> <b-port> <c-ip> <c-port>", argv[0]);
+        exit(1);
     }
     initLibvnf((argc == 6 ? atoi(argv[5]) : 1), 1024, "127.0.0.1", dataStorePorts, 131072, false);
 
@@ -139,7 +139,7 @@ int main(int argc, char *argv[]) {
     neighbour1Port = atoi(argv[4]);
 
     // create server
-    ConnId serverId = initServer("", mmeIp, mmePort, "tcp");
+    ConnId serverId = initServer("", mmeIp, mmePort, "udp");
     // register callback to handle packets coming from A
     /* registerReqObjIdExtractor(serverId, roidExtractorAtoB); */
     registerPacketBoundaryDisambiguator(serverId, pbdAtoB);

@@ -14,6 +14,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
+#include <sys/timerfd.h>
 #include <netinet/in.h>
 #include <netinet/sctp.h>
 #include <arpa/inet.h>
@@ -32,6 +33,7 @@
 #include <bitset>
 #include <boost/pool/simple_segregated_storage.hpp>
 #include <boost/foreach.hpp>
+#include <boost/algorithm/string.hpp> 
 #include <vector>
 #include <cstddef>
 #include <algorithm>
@@ -39,6 +41,7 @@
 #include <fstream>
 
 #include "datastore/dspackethandler.hpp"
+#include "json.hpp"
 
 #define LIBVNF_STACK_KERNEL 1
 #define LIBVNF_STACK_KERNEL_BYPASS 2
@@ -75,6 +78,9 @@
 #define ARP_REPLY 2
 #define ARP_CACHE_LEN 20
 #define NUM_CALLBACK_EVENTS 2
+#define SOCK_BOUNDARY 65536
+#define TIMER_DEFAULT_DURATION (6)
+#define TIMER_DEFAULT_RETRIES  (4)
 
 namespace vnf {
 
@@ -150,6 +156,71 @@ public:
   void
   closeConn();
 
+};
+
+class timer{
+private:
+  int coreId;
+  int fd;
+  timer(const class timer& t) = delete;
+  class timer & operator=(const timer &t) = delete;
+public:
+  int duration;
+  int retries;
+  void* data;
+
+  timer(int coreId=0);
+  ~timer();
+  void (*timeOutFunction)(timer *);
+  void startTimer(int duration, int retries);
+  void startTimer();//previous/default time of 6 Sec
+  void stopTimer();
+  int getFd();
+};
+
+timer* registerTimer(void timeOutFunction(timer *), ConnId& ConnId);
+void deleteTimer(timer *t);
+
+namespace http {
+
+  enum err {
+  DONE = 0,
+  INCOMPLETE_PACKET = 1,
+  NO_PACKET = 2
+  };
+
+  struct extractResponseArg {
+    char* rawPacket;
+    int packetLen;
+    string packet;
+    map<string,string> headers;
+    enum err errCode;
+  };
+
+  struct extractRequestArg {
+    char* rawPacket;
+    int packetLen;
+    string packet;
+    string reqType;
+    vector<string> path;
+    map<string,string> headers;
+    enum err errCode;
+  };
+
+  string createHTTPRequest(string reqType, string host, string url, nlohmann::json reqBody=NULL, string contentType="application/json");
+  string createHTTPRequest1(string reqType, string host, string url, string reqBody="", string contentType="application/json");
+
+  void extractHTTPResponse(int &status_code, extractResponseArg &arg);
+
+  string createHTTPResponse(int status_code, nlohmann::json reqBody=NULL, string contentType="application/json");
+  string createHTTPResponse1(int status_code, string resBody="", string contentType="application/json");
+
+  void extractHTTPRequest(bool &status, extractRequestArg &arg);
+
+  void splitUrl(string baseUrl, string &host, string &ipAddr, int &port);
+
+  string encodeQuery(string name, string value);
+  
 };
 
 typedef void (*CallbackFn)(ConnId&, int, void *, char *, int, int, int);
@@ -379,7 +450,13 @@ registerforNotification(string controller_ip,
 void
 handle_arp_packet(char *buffer);
 
+
+ConnId getObjConnId(uint32_t connId);
+
+uint32_t getIntConnId(ConnId& connId);
+
 }
+
 
 #endif
 

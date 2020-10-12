@@ -43,7 +43,7 @@ struct thread_data {
 vector<vector<uint16_t> > p_vec; //vector for 10000 ports/thread
 vector<int> req_count; //request counter per thread
 void signalHandler(int signum) {
-    for (int i = 0; i < 20; i++)
+    for (int i = 0; i < req_count.size(); i++)
         cout << "Req_count not closed thread is " << req_count[i] << "\n";
 
     // cleanup and close up stuff here
@@ -172,8 +172,8 @@ void populate_ports1(uint16_t numth, int server_cores) {
     }
 }
 
-void printinput() {
-    printf("Run : ./a.out <num-threads> <duration-seconds>\n");
+void printinput(char* fname) {
+    printf("Run : %s <num-threads> <duration-seconds> <clientIp> <clientPort> <serverIp> <serverPort>", fname);
 }
 
 long long diff(timespec start, timespec end) {
@@ -209,6 +209,11 @@ void *action(void *arg) {
     int i = my_data->id, j = 0;
     int my_port, td_val = i;
     char buf[50];
+    struct sockaddr_in rcvr_addr;
+    rcvr_addr.sin_family = AF_INET;
+    rcvr_addr.sin_addr.s_addr = inet_addr(serverIp.c_str());  //lb
+    rcvr_addr.sin_port = htons(serverPort);
+    int len = sizeof(rcvr_addr);
     start = time(NULL);
     t = 0;
     while (1) {
@@ -226,7 +231,9 @@ void *action(void *arg) {
         }
         write_lock.lock();
         /* printf("write: %s\n", buf); */
-        n = write(socketfd, buf, 50);
+        n = sendto(socketfd, buf, 50, 
+            MSG_CONFIRM, (const struct sockaddr *) &rcvr_addr, 
+			sizeof(rcvr_addr));
         write_lock.unlock();
         if (n <= 0) {
             cout << "Error : Wirite Error" << errno << '\n';
@@ -234,7 +241,9 @@ void *action(void *arg) {
             break;
         }
         read_lock.lock();
-        n = read(socketfd, buf, 50);
+        n = recvfrom(socketfd, buf, 50,
+            MSG_WAITALL, (struct sockaddr *) &rcvr_addr, 
+			(socklen_t *)&len);
         /* printf("read: %s\n", buf); */
         read_lock.unlock();
         if (n <= 0) {
@@ -266,8 +275,8 @@ int main(int argc, char *argv[]) {
     signal(SIGINT, signalHandler);
 
     if (argc != 7) {
-        printinput();
-        exit(0);
+        printinput(argv[0]);
+        exit(1);
     }
 
     numth = atoi(argv[1]);
@@ -293,7 +302,7 @@ int main(int argc, char *argv[]) {
     rcvr_addr.sin_family = AF_INET;
     rcvr_addr.sin_addr.s_addr = inet_addr(serverIp.c_str());  //lb
     rcvr_addr.sin_port = htons(portno);
-    socketfd = socket(AF_INET, SOCK_STREAM, 0);
+    socketfd = socket(AF_INET, SOCK_DGRAM, 0);
     if (socketfd < 0) {
         cout << "Error: Opening Socket" << '\n';
         exit(-1);
@@ -302,13 +311,7 @@ int main(int argc, char *argv[]) {
     struct timeval tv1;
     tv1.tv_sec = 2; //timeout in seconds
     tv1.tv_usec = 0;
-    setsockopt(socketfd, SOL_SOCKET, SO_RCVTIMEO, (const char *) &tv1, sizeof tv1);
-
-    if (connect(socketfd, (struct sockaddr *) &rcvr_addr, sizeof(rcvr_addr)) < 0) {
-        cout << "Error : connecting" << errno << '\n';
-        close(socketfd);
-        exit(-1);
-    }
+    // setsockopt(socketfd, SOL_SOCKET, SO_RCVTIMEO, (const char *) &tv1, sizeof tv1);
 
     for (i = 0; i < numth; i++) {
         td[i].id = i;

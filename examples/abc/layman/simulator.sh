@@ -122,7 +122,7 @@ watch_report_and_clean () {
 
     # Retrieve useful data; here it is throughput
     log "Retrieving throughput"
-    ssh -t yashsriram@10.129.131.78 "
+    ssh -t hbhoyar@192.168.43.24 "
     screen -S libvnf-${TEST_NAME}-${B_TARGET} -X at '#' stuff ^C
     screen -list | grep libvnf-${TEST_NAME} | cut -d. -f1 | awk '{print $1}' | xargs kill 2>/dev/null;
     "

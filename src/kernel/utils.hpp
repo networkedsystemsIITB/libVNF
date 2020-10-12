@@ -70,6 +70,7 @@ struct PerCoreState {
     unordered_map<int, unordered_map<int, int> > reqObjAllocatorSocketIdReqObjIdToReqObjIdMap;
     unordered_map<int, ReqObjExtractorFn> socketIdReqObjIdExtractorMap;
     unordered_map<int, PacketBoundaryDisambiguatorFn> socketIdPBDMap;
+    map<int, class timer*> fdToObjectMap;
 
     // packet memory management
     vector<char> packetMemPoolBlock;
@@ -89,8 +90,9 @@ struct PerCoreState {
     //moved from globals
     string serverProtocol;
     unordered_map<int, string> socketProtocolMap;
+    unordered_map<int, sockaddr_in> udpSocketAddrMap;
 
-    int epollFd;
+    int epollFd = 0;
     unordered_map<int, PendingDataQueue> socketIdPendingDataQueueMap;
 
     PerCoreState() : isJobDone(false),
@@ -106,7 +108,7 @@ struct PerCoreState {
         reqObjMemPoolBlocks.resize(MAX_REQUEST_OBJECT_TYPES);
         // packet vector size. may have to increase it for very high I/O application
         // assuming pkt size 1024 TODO
-        packetMemPoolBlock.resize(1024 * 2048);
+        packetMemPoolBlock.resize(1500 * 2048); //1024
     }
 
     /**

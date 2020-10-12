@@ -11,6 +11,19 @@ Globals globals;
 
 UserConfig *userConfig = nullptr;
 
+int pinThreadToCore(int core_id) {
+   int numCores = sysconf(_SC_NPROCESSORS_ONLN);
+   if (core_id < 0 || core_id >= numCores)
+      return -1;
+
+   cpu_set_t cpuset;
+   CPU_ZERO(&cpuset);
+   CPU_SET(core_id, &cpuset);
+
+   pthread_t currentThread = pthread_self();
+   return pthread_setaffinity_np(currentThread, sizeof(cpu_set_t), &cpuset);
+}
+
 int vnf::initLibvnf(int maxCores, int bufferSize, string dataStoreIP, vector<int> dataStorePorts, int dataStoreThreshold,
                bool useRemoteDataStore) {
     userConfig = new UserConfig(maxCores, bufferSize,
@@ -110,6 +123,7 @@ int createClientToDS(int coreId, string remoteIP, int remotePort) {
 void *serverThread(void *args) {
     struct ServerPThreadArgument argument = *((struct ServerPThreadArgument *) args);
     int coreId = argument.coreId;
+    pinThreadToCore(coreId);
     spdlog::info("Server thread started on core {}", coreId);
 
     // memory pool initialization for request objects
@@ -122,7 +136,10 @@ void *serverThread(void *args) {
     perCoreStates[coreId].packetsMemPoolManager.add_block(
             &perCoreStates[coreId].packetMemPoolBlock.front(),
             perCoreStates[coreId].packetMemPoolBlock.size(),
-            1024);
+            1500); //1024 //1500
+
+    // set protocol for listening socket
+    perCoreStates[coreId].socketProtocolMap[globals.listeningSocketFd] = globals.serverProtocol;
 
     int epFd = epoll_create(MAX_EVENTS + 5);
     if (epFd < 0) {
@@ -135,10 +152,24 @@ void *serverThread(void *args) {
 
     struct epoll_event ev;
     globals.listenLock.lock();
-    ev.events = EPOLLIN | EPOLLET;
+    ev.events = EPOLLIN | (globals.serverProtocol == "udp" ? EPOLLEXCLUSIVE : EPOLLET);
     ev.data.fd = globals.listeningSocketFd;
     epoll_ctl(epFd, EPOLL_CTL_ADD, globals.listeningSocketFd, &ev);
     globals.listenLock.unlock();
+
+    map <int, class timer*>::iterator timerItr = perCoreStates[coreId].fdToObjectMap.begin();
+    while(timerItr != perCoreStates[coreId].fdToObjectMap.end()) {
+        memset(&ev,0, sizeof(ev));
+        ev.events = EPOLLIN;
+        ev.data.fd = timerItr->second->getFd();
+        if(epoll_ctl(epFd, EPOLL_CTL_ADD,
+                     timerItr->second->getFd(), &ev)==-1){
+            spdlog::error("epoll_ctl failed, eventFD {},  Error {}",
+                    timerItr->second->getFd(), strerror(errno));
+        }
+        spdlog::debug("added timer fd {} into epoll", timerItr->second->getFd());
+        timerItr++;
+    }
 
     struct epoll_event *epollEvents;
     epollEvents = (struct epoll_event *) calloc(MAX_EVENTS, sizeof(struct epoll_event));
@@ -163,6 +194,7 @@ void *serverThread(void *args) {
         }
 
         // wait for epoll events
+        // spdlog::debug("thread {}, cpu {}\n", argument.coreId, sched_getcpu());
         int numEventsCaptured = epoll_wait(epFd, epollEvents, MAX_EVENTS, -1);
         if (numEventsCaptured < 0) {
             if (errno != EINTR) {
@@ -170,6 +202,7 @@ void *serverThread(void *args) {
             }
             break;
         }
+        // spdlog::debug("Caught {} events\n", numEventsCaptured);
         for (int i = 0; i < numEventsCaptured; i++) {
             int currentSocketId = epollEvents[i].data.fd;
             uint32_t currentEvents = epollEvents[i].events;
@@ -191,8 +224,21 @@ void *serverThread(void *args) {
                 continue;
             }
 
+            /*For Handling Timers : Check if fd belongs to any timer*/
+            map <int, class timer*>::iterator timerItr =
+                        perCoreStates[coreId].fdToObjectMap.find(currentSocketId);
+			if(timerItr != perCoreStates[coreId].fdToObjectMap.end()){
+				/*Timeout Function will execute and if all retries are 
+				exhausted then timer will be de-registered.What action to be 
+				after exhausting all timers is yet to discuss and implement */ 
+				spdlog::debug("Timeout Function for fd {} Triggered",
+                        currentSocketId);
+				(timerItr->second)->timeOutFunction(timerItr->second);
+                continue;
+			}
+
             /* Event occured on global listening socket. Therefore accept the connection */
-            if (currentSocketId == globals.listeningSocketFd) {
+            if (currentSocketId == globals.listeningSocketFd && globals.serverProtocol != "udp") {
 
                 while (true) {
                     int socketId = accept(globals.listeningSocketFd, NULL, NULL);
@@ -317,24 +363,59 @@ void *serverThread(void *args) {
                 string currentProtocol = perCoreStates[coreId].socketProtocolMap[socketId];
                 int streamNum = -1;
                 /* read from socket as per the protocol specified */
-                if(currentProtocol=="sctp"){
+                if(currentProtocol == "sctp"){
                     struct sctp_sndrcvinfo s_sndrcvinfo;
                     numBytesRead = (int) sctp_recvmsg(socketId, buffer, (size_t)userConfig->BUFFER_SIZE, (struct sockaddr *) NULL, 0, &s_sndrcvinfo, NULL);
                     streamNum = s_sndrcvinfo.sinfo_stream;
                 }
-                else{
+                 else if(currentProtocol == "tcp"){
                     numBytesRead = (int) read(socketId, buffer, (size_t) userConfig->BUFFER_SIZE);
+                } else if(currentProtocol == "udp"){
+                    struct sockaddr_in address;
+                    int len = sizeof(address);
+                    numBytesRead = recvfrom(socketId, buffer, (size_t) userConfig->BUFFER_SIZE, MSG_WAITALL, (struct sockaddr *) &address, (socklen_t *)&len);
+                    if(socketId != globals.listeningSocketFd){
+                        if(address.sin_port != perCoreStates[coreId].udpSocketAddrMap[socketId].sin_port
+                            || address.sin_addr.s_addr != perCoreStates[coreId].udpSocketAddrMap[socketId].sin_addr.s_addr){
+                            spdlog::warn("UDP packet from different server\n");
+                        }
+                    }
+                    else if(numBytesRead <= 0){
+                        continue;
+                    }
+                    else{
+                        socketId = address.sin_port + SOCK_BOUNDARY;
+                        /* check if this is new udp connection */
+                        if(perCoreStates[coreId].udpSocketAddrMap.count(socketId) == 0){
+                            perCoreStates[coreId].udpSocketAddrMap[socketId] = address;
+                            perCoreStates[coreId].socketProtocolMap[socketId] = globals.serverProtocol;
+                            perCoreStates[coreId].connCounter++;
+                            for (int eventType = 0; eventType < NUM_CALLBACK_EVENTS; ++eventType) {
+                                perCoreStates[coreId].socketIdCallbackMap[eventType][socketId] = argument.onAcceptByServerCallback[eventType];
+                            }
+                            perCoreStates[coreId].socketIdDSCallbackMap[socketId] = argument.onAcceptByServerDSCallback;
+                            perCoreStates[coreId].socketIdReqObjIdExtractorMap[socketId] = argument.onAcceptByServerReqObjIdExtractor;
+                            perCoreStates[coreId].socketIdPBDMap[socketId] = argument.onAcceptByServerPBD;
+                            CallbackFn callback = perCoreStates[coreId].socketIdCallbackMap[ACCEPT][socketId];
+                            ConnId connId = ConnId(coreId, socketId);
+                            if(callback){
+                                callback(connId, 0, nullptr, nullptr, 0, 0, 0);
+                            }
+                        }
+                    }
                 }
-
+                
                 /* numBytesRead == -1 for errors & numBytesRead == 0 for EOF */
-                if (numBytesRead <= 0) {
+                if (numBytesRead <= 0 && currentProtocol != "udp") {
                     spdlog::error("Read error on non-remote datastore socket. Trying to close the socket");
                     if (close(socketId) < 0) {
                         spdlog::error("Connection could not be closed properly");
                     }
                     continue;
                 }
-
+                buffer[numBytesRead] = '\0';
+                char *temp = buffer;
+                spdlog::debug("Message: {}\n", temp);
                 perCoreStates[coreId].numRecvs++;
 
                 /* packet boundary disambiguation */
@@ -381,18 +462,29 @@ void *serverThread(void *args) {
 
             /* EPOLLOUT: The associated file is available for write(2) operations. */
             if (currentEvents & EPOLLOUT) {
-                int socketId = currentSocketId;
+                int socketId = currentSocketId, ret, dataLen;
+                char *data;
+                string currentProtocol = perCoreStates[coreId].socketProtocolMap[socketId];
                 while (!perCoreStates[coreId].isPendingDataQueueEmpty(socketId)) {
                     PendingData dataToSend = perCoreStates[coreId].socketIdPendingDataQueueMap[socketId].front();
-                    int ret;
-                    if(globals.serverProtocol == "sctp"){
-                        ret = sctp_sendmsg(socketId, (void *) dataToSend.data, (size_t)dataToSend.dataLen, NULL, 0, 0, 0, dataToSend.streamNum, 0, 0);
-                    } else {
-                        ret = write(socketId, dataToSend.data, dataToSend.dataLen);
+                    dataLen = dataToSend.dataLen;
+                    data = dataToSend.data;
+                    if(currentProtocol == "sctp"){
+                        ret = sctp_sendmsg(socketId, data, dataLen, NULL, 0, 0, 0, dataToSend.streamNum, 0, 0);
+                    } else if(currentProtocol == "tcp"){
+                        ret = write(socketId, data, dataLen);
+                    } else if(currentProtocol == "udp"){
+                        struct sockaddr_in address = perCoreStates[coreId].udpSocketAddrMap[socketId];
+                        if(socketId >= SOCK_BOUNDARY){
+                            ret = sendto(globals.listeningSocketFd, data, dataLen, MSG_CONFIRM, (const struct sockaddr *) &address, sizeof(address));
+                        }
+                        else{
+                            ret = sendto(socketId, data, dataLen, MSG_CONFIRM, (const struct sockaddr *) &address, sizeof(address));
+                        }
                     }
                     perCoreStates[coreId].packetsMemPoolManager.free((void *) dataToSend.data);
                     perCoreStates[coreId].socketIdPendingDataQueueMap[socketId].pop();
-                    if (ret < 0) {
+                    if (ret < 0 && socketId != globals.listeningSocketFd) {
                         spdlog::error("Connection closed with client");
                         close(socketId);
                         break;
@@ -531,7 +623,7 @@ ConnId& vnf::ConnId::registerPacketBoundaryDisambiguator(vector<int> pbd(char *b
 
 void sigINTHandler(int signalCode) {
     for (int i = 0; i < userConfig->MAX_CORES; i++) {
-        spdlog::info("\nOn Core: {}\n\tNo. Accepted Connections: {}\n\tNo. Packets Recv: {}\n\tNo. Packets Sent: {}\n", i, perCoreStates[i].connCounter, perCoreStates[i].numRecvs, perCoreStates[i].numSends);
+        spdlog::critical("\nOn Core: {}\n\tNo. Accepted Connections: {}\n\tNo. Packets Recv: {}\n\tNo. Packets Sent: {}\n", i, perCoreStates[i].connCounter, perCoreStates[i].numRecvs, perCoreStates[i].numSends);
         close(perCoreStates[i].dsSocketId1);
         close(perCoreStates[i].dsSocketId2);
         perCoreStates[i].isJobDone = true;
@@ -548,8 +640,11 @@ void vnf::startEventLoop() {
     if(globals.serverProtocol == "sctp"){
         globals.listeningSocketFd = socket(AF_INET, SOCK_STREAM, IPPROTO_SCTP);
     }
-    else{
+    else if(globals.serverProtocol == "tcp"){
         globals.listeningSocketFd = socket(AF_INET, SOCK_STREAM, 0);
+    }
+    else if(globals.serverProtocol == "udp"){
+        globals.listeningSocketFd = socket(AF_INET, SOCK_DGRAM, 0);
     }
     if (globals.listeningSocketFd < 0) {
         spdlog::error("Failed to create listening socket!");
@@ -593,12 +688,14 @@ void vnf::startEventLoop() {
         }
     }
 
-    ret = listen(globals.listeningSocketFd, 4096);
-    if (ret < 0) {
-        spdlog::error("Listen failed!");
-        return;
+    if(globals.serverProtocol != "udp"){
+        ret = listen(globals.listeningSocketFd, 4096);
+        if (ret < 0) {
+            spdlog::error("Listen failed!");
+            return;
+        }
+        spdlog::info("Listen on global socket successful");
     }
-    spdlog::info("Listen on global socket successful");
 
     spdlog::info("Datastore Memory Pool Size: {}", globals.dsMemPoolBlock.size());
     globals.dataStoreLock.lock();
@@ -643,8 +740,11 @@ ConnId vnf::ConnId::createClient(string localIP, string remoteIP, int remotePort
             exit(-1);
         }
     }
-    else{
+    else if(protocol == "tcp"){
         sockId = socket(AF_INET, SOCK_STREAM, 0);
+    }
+    else if(protocol == "udp"){
+        sockId = socket(AF_INET, SOCK_DGRAM, 0);
     }
     if (sockId < 0) {
         spdlog::error("Failed to create listening socket! {}", errno);
@@ -664,11 +764,16 @@ ConnId vnf::ConnId::createClient(string localIP, string remoteIP, int remotePort
     address.sin_addr.s_addr = inet_addr(remoteIP.c_str());
     address.sin_port = htons(remotePort);
 
-    ret = connect(sockId, (struct sockaddr *) &address, sizeof(struct sockaddr_in));
-    if (ret < 0 && errno != EINPROGRESS) {
-        spdlog::error("connect issue {}", errno);
-        close(sockId);
-        return ConnId(-1);
+    if(protocol == "udp"){
+        perCoreStates[coreId].udpSocketAddrMap[sockId] = address;
+    }
+    else{
+        ret = connect(sockId, (struct sockaddr *) &address, sizeof(struct sockaddr_in));
+        if (ret < 0 && errno != EINPROGRESS) {
+            spdlog::error("connect issue {}", errno);
+            close(sockId);
+            return ConnId(-1);
+        }
     }
 
     struct epoll_event epollEvent;
@@ -702,8 +807,17 @@ ConnId& vnf::ConnId::sendData(char *data, int dataLen, int streamNum) {
     string currentProtocol = perCoreStates[coreId].socketProtocolMap[socketId];
     if(currentProtocol == "sctp"){
         ret = sctp_sendmsg(socketId, (void *) data, (size_t) dataLen, NULL, 0, 0, 0, streamNum, 0, 0);
-    } else {
+
+    } else if(currentProtocol == "tcp"){
         ret = write(socketId, data, dataLen);
+    } else if(currentProtocol == "udp"){
+        struct sockaddr_in address = perCoreStates[coreId].udpSocketAddrMap[socketId];
+        if(socketId >= SOCK_BOUNDARY){
+            ret = sendto(globals.listeningSocketFd, data, dataLen, MSG_CONFIRM, (const struct sockaddr *) &address, sizeof(address));
+        }
+        else{
+            ret = sendto(socketId, data, dataLen, MSG_CONFIRM, (const struct sockaddr *) &address, sizeof(address));
+        }
     }
     int errnoLocal = errno;
 
@@ -714,6 +828,7 @@ ConnId& vnf::ConnId::sendData(char *data, int dataLen, int streamNum) {
             spdlog::warn("sendData: adding packet to queue, not sent successfully");
         } else {
             spdlog::error("sendData: error on write {}", errnoLocal);
+            perCoreStates[coreId].packetsMemPoolManager.free((void *) data);
         }
         return *this;
     }
@@ -965,26 +1080,37 @@ ConnId& vnf::ConnId::delData(string tableName, int key, enum DataLocation locati
 void vnf::ConnId::closeConn() {
     int socketId = this->socketId;
     int coreId = this->coreId;
+    int ret, dataLen;
+    char *data;
+    string currentProtocol = perCoreStates[coreId].socketProtocolMap[socketId];
     while (!perCoreStates[coreId].isPendingDataQueueEmpty(socketId)) {
         PendingData dataToSend = perCoreStates[coreId].socketIdPendingDataQueueMap[socketId].front();
-        int ret;
-        if(globals.serverProtocol == "sctp"){
-            ret = sctp_sendmsg(socketId, (void *) dataToSend.data, (size_t)dataToSend.dataLen, NULL, 0, 0, 0, dataToSend.streamNum, 0, 0);
-        } else {
-            ret = write(socketId, dataToSend.data, dataToSend.dataLen);
+        dataLen = dataToSend.dataLen;
+        data = dataToSend.data;
+        if(currentProtocol == "sctp"){
+            ret = sctp_sendmsg(socketId, data, dataLen, NULL, 0, 0, 0, dataToSend.streamNum, 0, 0);
+        } else if(currentProtocol == "tcp"){
+            ret = write(socketId, data, dataLen);
+        } else if(currentProtocol == "udp"){
+            struct sockaddr_in address = perCoreStates[coreId].udpSocketAddrMap[socketId];
+            ret = sendto(socketId, data, dataLen, MSG_CONFIRM, (const struct sockaddr *) &address, sizeof(address));
         }
         perCoreStates[coreId].packetsMemPoolManager.free((void *) dataToSend.data);
         perCoreStates[coreId].socketIdPendingDataQueueMap[socketId].pop();
         if (ret < 0) {
             spdlog::error("Connection closed with client");
-            close(socketId);
             break;
         }
     }
     perCoreStates[coreId].delLeftOverPacketFragment(socketId);
     // todo free callback registrations
     perCoreStates[coreId].socketProtocolMap.erase(socketId);
-    close(socketId);
+    if(currentProtocol == "udp"){
+        perCoreStates[coreId].udpSocketAddrMap.erase(socketId);
+    }
+    if(socketId < SOCK_BOUNDARY){
+        close(socketId);
+    }
 }
 
 void * vnf::allocReqObj(ConnId& connId, int reqObjType, int reqObjId) {
@@ -1047,3 +1173,352 @@ void vnf::closeConn(ConnId& connId) {
   return connId.closeConn();
 }
 
+void defaultTimeOutFunction(timer *t){
+	spdlog::debug("Default Timeout Function for fd {}, Timer Attempt Remaining : {}",
+		t->getFd(),t->retries);
+	t->retries-=1;
+	if(t->retries<=0)
+	{
+		//De-register the timer
+		t->stopTimer();
+		return;
+	}
+	/*Following Code is necessity for reloading Timer,Reason Unknown....*/
+	struct itimerspec temp;
+	int rc=timerfd_gettime(t->getFd(),&temp);
+	/*timerfd_gettime return 0 on success and -1 on failure*/
+	if(rc==-1)
+	{
+		spdlog::debug("Failed in reloading the timer and extracting the current bufferes from fd {}",t->getFd());
+	}
+}
+
+timer::timer(int coreId){
+	/*Initially default duration set to 6 Sec*/
+	this->duration=TIMER_DEFAULT_DURATION;
+	this->retries=TIMER_DEFAULT_RETRIES;
+	this->fd=-1;
+    this->coreId = coreId;
+    this->timeOutFunction = defaultTimeOutFunction;
+}
+
+int timer::getFd(){
+	return this->fd;
+}
+
+timer::~timer(){
+    // LOG_ENTRY;
+	this->stopTimer();
+    // LOG_EXIT;
+}
+
+void timer::startTimer(int duration,int retries)
+{
+    // LOG_ENTRY;
+
+	struct epoll_event ev = {};
+	struct itimerspec iterationDetails = {};
+	if(this->fd==-1){
+		/*New fd is created for timer,required while executing for first time*/
+		this->fd=timerfd_create(CLOCK_REALTIME, 0);
+        if(this->fd==-1){
+            spdlog::error("Error in creating fd for Timer : {} ",strerror(errno));
+            return;
+        }
+		/*this fd is added in the map to retrieve back entire object 
+		when it will get triggered from*/ 
+		perCoreStates[coreId].fdToObjectMap[this->fd]=this;
+	}
+	this->duration=(duration<0)?TIMER_DEFAULT_DURATION:duration;
+	this->retries=(retries<0)?TIMER_DEFAULT_RETRIES:retries;
+	struct timespec now = {};
+	//Get Current time
+	if (clock_gettime(CLOCK_REALTIME, &(now)) == -1)
+		spdlog::debug("Error in getting Clock");/*Has not occured yet*/
+	//Configuring Event for Fd created
+	ev.events=EPOLLIN | EPOLLET;/*Edge Triggered Behavior*/
+	ev.data.fd=this->fd;
+	//Configuring Duration of timer
+	iterationDetails.it_value.tv_sec = now.tv_sec + duration;
+	iterationDetails.it_value.tv_nsec = now.tv_nsec;
+
+	/*Following values will get autofilled after timeout
+	1 is subtracted because time includes 0 as the last cout 
+	i.e. 4:4,3,2,1,0 but our intention was 4 not 5*/
+	iterationDetails.it_interval.tv_sec = duration-1;
+	iterationDetails.it_interval.tv_nsec = now.tv_nsec;
+	//start/update the timer
+	if (timerfd_settime(this->fd, TFD_TIMER_ABSTIME, &iterationDetails,
+		NULL) == -1)
+	{
+		spdlog::error("Error in settingup timer : {}",strerror(errno));
+	}
+	//Registered fd to epollFd for monitoring
+    int epollFd = perCoreStates[coreId].epollFd;
+    if(epollFd == 0) {
+        spdlog::debug("Epoll fd has not been created. fd {} will be added later",
+                this->fd);
+    }else if(epoll_ctl(epollFd,EPOLL_CTL_ADD,this->fd,&ev)==-1)
+	{   
+		spdlog::error("Error in settingup epoll event for Timer: {}",strerror(errno));
+	}
+	spdlog::debug("Successfully starting Timer with fd {} in epfd {}",
+		this->fd, epollFd);
+    // LOG_EXIT;
+}
+
+void timer::startTimer(){
+	startTimer(this->duration,this->retries);	
+}
+
+void timer::stopTimer(){
+	spdlog::debug("Default stopTimer for fd {}",this->fd);
+    if(this->fd!=-1)
+    {
+        //De-Register the timer
+        epoll_ctl(perCoreStates[coreId].epollFd,EPOLL_CTL_DEL,this->getFd(),NULL);
+        /*Remove the entry from the map*/
+        perCoreStates[coreId].fdToObjectMap.erase(this->fd);
+        /*Free the fd resource/closing timer*/
+        close(this->fd);
+        this->fd=-1;
+    }
+    /* Further Actions for stopTimer should be implemented by derived class. */
+}
+
+timer* vnf::registerTimer(void timeOutFunction(timer *), ConnId& connId){
+    timer *t = new timer(connId.coreId);
+    t->timeOutFunction = timeOutFunction;
+    return t;
+}
+
+void vnf::deleteTimer(timer *t){
+    delete t;
+}
+
+void tokenize(const std::string& s, const char* delim,
+			std::vector<std::string>& out, unsigned n=INT_MAX, bool trim=false)
+{
+	string::size_type beg = 0;
+	for (string::size_type end = 0, i=0; (end = s.find(delim, end)) != std::string::npos and i<n; ++end, ++i)
+	{
+        string s1 = s.substr(beg, end - beg);
+        if(trim)
+            boost::trim(s1);
+		out.push_back(s1);
+		beg = end + strlen(delim);
+	}
+    string s1 = s.substr(beg);
+    if(trim)
+        boost::trim(s1);
+    out.push_back(s1);
+}
+
+string vnf::http::createHTTPRequest(string reqType, string host, string url, nlohmann::json reqBody, string contentType){
+    return vnf::http::createHTTPRequest1(reqType, host, url, reqBody.dump(), contentType);
+}
+
+string vnf::http::createHTTPRequest1(string reqType, string host, string url, string reqBody, string contentType){
+    string httpRequest;
+    
+    if(reqType == "GET")
+        httpRequest =
+            "GET " + url + " HTTP/1.1\r\n"
+            "Host: " + host + "\r\n"
+            "User-Agent:libvnf\r\n"
+            "Connection: Keep-Alive\r\n"
+            "\r\n";
+    else
+        httpRequest =
+            reqType + " " + url + " HTTP/1.1\r\n"
+            "Host: " + host + "\r\n"
+            "Content-Length:" + to_string(reqBody.size()) + "\r\n"
+            "Content-Type:" + contentType + "\r\n"
+            "User-Agent:libvnf\r\n"
+            "Connection: Keep-Alive\r\n"
+            "\r\n"
+            + reqBody;
+
+    return httpRequest;
+}
+
+void vnf::http::extractHTTPResponse(int &status, extractResponseArg &arg){
+
+    string sPacket(arg.rawPacket, arg.packetLen);
+    map<string,string> &headers = arg.headers;
+
+    if(!status){
+
+        vector<string> v;
+        tokenize(sPacket, "\r\n\r\n", v, 1);
+
+        vector<string> sHeaders;
+        tokenize(v[0], "\r\n", sHeaders);
+
+        vector<string> meta;
+        tokenize(sHeaders[0], " ", meta);
+        status = stoi(meta[1]);
+
+        for(uint i=1; i<sHeaders.size(); i++){
+            vector<string> t;
+            tokenize(sHeaders[i], ":", t, 1, true);
+            transform(t[0].begin(), t[0].end(), t[0].begin(), ::tolower);
+            headers[t[0]] = t[1];
+        }
+        auto it = headers.find("content-length");
+        if(it != headers.end()){
+            int contentLength = stoi(it->second);
+            if(contentLength != v[1].length()){
+                arg.errCode = INCOMPLETE_PACKET;
+                return;
+            }
+        }
+
+        arg.packet = v[1];
+    
+    }
+    else if(sPacket.length() > 0){
+        arg.packet = sPacket;
+    }
+    else{
+        spdlog::warn("Unknown Packet");
+        arg.errCode = NO_PACKET;
+        return;
+    }
+
+    arg.errCode = DONE;
+    return;
+    
+}
+
+void vnf::http::splitUrl(string baseUrl, string &host, string &ipAddr, int &port){
+    host = baseUrl.substr(7,baseUrl.length()-8);
+    int delim = baseUrl.find(":", 7);
+    ipAddr = baseUrl.substr(7,delim-7);
+    port = stoi(baseUrl.substr(delim+1,baseUrl.length()-delim-2));
+}
+
+string urlEncode(string str){
+    string new_str = "";
+    char c;
+    int ic;
+    const char* chars = str.c_str();
+    char bufHex[10];
+    int len = strlen(chars);
+
+    for(int i=0;i<len;i++){
+        c = chars[i];
+        ic = c;
+        if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~') new_str += c;
+        else {
+            sprintf(bufHex,"%X",c);
+            if(ic < 16) 
+                new_str += "%0"; 
+            else
+                new_str += "%";
+            new_str += bufHex;
+        }
+    }
+    return new_str;
+}
+
+string vnf::http::encodeQuery(string name, string value){
+    return urlEncode(name) + "=" + urlEncode(value);
+}
+
+string vnf::http::createHTTPResponse(int status_code, nlohmann::json resBody, string contentType){
+    if(resBody == NULL)
+        return createHTTPResponse1(status_code, "", contentType);
+    else
+        return createHTTPResponse1(status_code, resBody.dump(), contentType);
+}
+
+string vnf::http::createHTTPResponse1(int status_code, string resBody, string contentType){
+    string status;
+    if(status_code == 200)
+        status = "200 OK";
+    else if(status_code == 201)
+        status = "201 Created";
+    else if(status_code == 204)
+        status = "204 No Content";
+    else if(status_code == 400)
+        status = "400 Bad Request";
+    else if(status_code == 403)
+        status = "403 Forbidden";
+    else if(status_code == 404)
+        status = "404 Not Found";
+    else if(status_code == 500)
+        status = "500 Internal Error";
+    else
+        status = "500 Internal Error";
+
+
+    string httpResponse = "HTTP/1.1 "+status+"\r\n";
+    if(resBody == ""){
+        httpResponse += "Content-Length:0\r\n"
+                        "\r\n";
+    }
+    else{
+        httpResponse += "Content-Length:"+ to_string(resBody.size()) + "\r\n"
+                        "Content-Type:"+contentType+"\r\n"
+                        "\r\n"
+                        + resBody;
+    }
+    return httpResponse;
+}
+
+void vnf::http::extractHTTPRequest(bool &status, extractRequestArg &arg){
+    string sPacket(arg.rawPacket, arg.packetLen);
+
+    if(!status){
+
+        vector<string> v;
+        tokenize(sPacket, "\r\n\r\n", v, 1);
+
+        vector<string> sHeaders;
+        tokenize(v[0], "\r\n", sHeaders);
+
+        vector<string> meta;
+        tokenize(sHeaders[0], " ", meta);
+        arg.reqType = meta[0];
+
+        tokenize(meta[1].substr(1), "/", arg.path);
+
+        for(uint i=1; i<sHeaders.size(); i++){
+            vector<string> t;
+            tokenize(sHeaders[i], ":", t, 1, true);
+            transform(t[0].begin(), t[0].end(), t[0].begin(), ::tolower);
+            arg.headers[t[0]] = t[1];
+        }
+
+        status = 1;
+        
+        if(v.size() == 1 || (v.size()==2 && v[1].length() == 0)){
+            arg.errCode = INCOMPLETE_PACKET;
+            return;
+        }
+
+        arg.packet = v[1];
+    
+    }
+    else if(sPacket.length() > 0){
+        arg.packet = sPacket;
+    }
+    else{
+        spdlog::warn("Unknown Packet");
+        arg.errCode = NO_PACKET;
+        return;
+    }
+
+    arg.errCode = DONE;
+    return;
+}
+
+
+vnf::ConnId vnf::getObjConnId(uint32_t connId) { 
+    return vnf::ConnId(connId / 10000000, connId % 10000000); 
+}
+
+uint32_t vnf::getIntConnId(vnf::ConnId& connId) { 
+    return connId.coreId * 10000000 + connId.socketId;
+}
